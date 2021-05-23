@@ -1,4 +1,4 @@
 .vagrant/
-.log
-.vdi
+*.log
+*.vdi
 .DS_Store
