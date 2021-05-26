@@ -2,3 +2,5 @@
 *.log
 *.vdi
 .DS_Store
+script.md
+*.pdf

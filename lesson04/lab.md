@@ -185,20 +185,22 @@ LABEL=cloudimg-rootfs   /        ext4   defaults        0 1
 root@ubuntu-bionic:/home/vagrant# blkid /dev/md0
 /dev/md0: UUID="9d80d298-25ad-4229-a76c-478a42651252" TYPE="ext4"
 ```
-- Добавим конфигурацию монтирования UUID=9d80d298-25ad-4229-a76c-478a42651252 /mnt/raid ext4 defaults 0 0
+- Добавим конфигурацию монтирования и проверим ее наличие
 ```
-root@ubuntu-bionic:/home/vagrant# nano /etc/fstab
+vagrant@ubuntu-bionic:~$ cat /etc/fstab
+LABEL=cloudimg-rootfs   /        ext4   defaults        0 1
+UUID=3efd801e-222c-4b86-963d-4f98d9e996ab /mnt/raid ext4 defaults 0 0
 ```
-- sadasd
+- Смонтируем нашу конфигурацию
 ```
 root@ubuntu-bionic:/home/vagrant# mount /dev/md0
 ```
-- sadsa
+- Проверим наличие монтирования
 ```
 root@ubuntu-bionic:/home/vagrant# mount | grep md0
 /dev/md0 on /mnt/raid type ext4 (rw,relatime,data=ordered)
 ```
-- asddsdsads
+- Проверим возможность создадания файлов
 ```
 root@ubuntu-bionic:/home/vagrant# touch /mnt/raid/file01
 root@ubuntu-bionic:/home/vagrant# ll /mnt/raid
@@ -303,7 +305,7 @@ Consistency Policy : resync
 ```
 
 ## LVM
-- asdasd
+- Убираем связи со старым RAID
 ```
 root@ubuntu-bionic:/mnt# cd /mnt
 root@ubuntu-bionic:/mnt# umount /dev/md0
@@ -315,7 +317,7 @@ root@ubuntu-bionic:/mnt# mdadm --zero-superblock /dev/sd[c-f]1
 ```
 sudo apt install lvm2
 ```
-- fdsfsdf
+- Создаем на базе существующих разделом PV
 ```
 root@ubuntu-bionic:/mnt# pvcreate /dev/sd[c-f]1
   Physical volume "/dev/sdc1" successfully created.
@@ -323,7 +325,7 @@ root@ubuntu-bionic:/mnt# pvcreate /dev/sd[c-f]1
   Physical volume "/dev/sde1" successfully created.
   Physical volume "/dev/sdf1" successfully created.
 ```
-- fdsfsdf
+- Проверим их наличие
 ```
 root@ubuntu-bionic:/mnt# pvdisplay /dev/sd[c-f]1
   "/dev/sdc1" is a new physical volume of "<4.00 GiB"
@@ -338,12 +340,12 @@ root@ubuntu-bionic:/mnt# pvdisplay /dev/sd[c-f]1
   Allocated PE          0
   PV UUID               cTln41-Oqdp-Uip3-JLrT-ZsYC-bD4F-4onRo8
 ```
-- saddsadsdsa
+-  Создадим группу
 ```
 root@ubuntu-bionic:/mnt# vgcreate vg1 /dev/sd[c-f]1
   Volume group "vg1" successfully created
 ```
-- saddsadsdsa
+- Проверим группуv
 ```
 root@ubuntu-bionic:/mnt# vgdisplay vg1
   --- Volume group ---
@@ -367,35 +369,13 @@ root@ubuntu-bionic:/mnt# vgdisplay vg1
   Free  PE / Size       4092 / 15.98 GiB
   VG UUID               8g9Ete-eYU7-0eXf-RgVc-sjjs-GO6S-eDyAxz
 ```
-- saddsadsdsa
+- Создадими логический раздел
 ```
-root@ubuntu-bionic:/mnt# vgdisplay vg1
-  --- Volume group ---
-  VG Name               vg1
-  System ID             
-  Format                lvm2
-  Metadata Areas        4
-  Metadata Sequence No  1
-  VG Access             read/write
-  VG Status             resizable
-  MAX LV                0
-  Cur LV                0
-  Open LV               0
-  Max PV                0
-  Cur PV                4
-  Act PV                4
-  VG Size               15.98 GiB
-  PE Size               4.00 MiB
-  Total PE              4092
-  Alloc PE / Size       0 / 0   
-  Free  PE / Size       4092 / 15.98 GiB
-  VG UUID               8g9Ete-eYU7-0eXf-RgVc-sjjs-GO6S-eDyAxz
-   
 root@ubuntu-bionic:/mnt# lvcreate -L 16000M -n lv1 vg1
   Logical volume "lv1" created.
-root@ubuntu-bionic:/mnt# lvdisplay lv1
-  Volume group "lv1" not found
-  Cannot process volume group lv1
+```
+- Проверим
+```
 root@ubuntu-bionic:/mnt# lvdisplay /dev/vg1/lv1
   --- Logical volume ---
   LV Path                /dev/vg1/lv1
@@ -414,13 +394,16 @@ root@ubuntu-bionic:/mnt# lvdisplay /dev/vg1/lv1
   - currently set to     256
   Block device           253:0
 ```
-- saddsadsdsa
+-  Удалим LV и создадим с указание размера в LE
 ```
 root@ubuntu-bionic:/mnt# lvremove /dev/vg1/lv1
 Do you really want to remove and DISCARD active logical volume vg1/lv1? [y/n]: y
   Logical volume "lv1" successfully removed
 root@ubuntu-bionic:/mnt# lvcreate -l 4092 -n lv1 vg1
   Logical volume "lv1" created.
+```
+- Проверим объем
+```
 root@ubuntu-bionic:/mnt# lvdisplay /dev/vg1/lv1
   --- Logical volume ---
   LV Path                /dev/vg1/lv1
