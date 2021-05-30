@@ -92,3 +92,12 @@ root@Client:/etc/syslog-ng# syslog-ng -s
 root@Client:/etc/syslog-ng# systemctl restart syslog-ng
 
 ### Check
+
+root@Server:/home/vagrant# tree /var/log/remote
+.
+└── client.hillel.ua
+    └── user
+        └── 30-05-2021
+            └── syslog.log
+
+3 directories, 1 file
