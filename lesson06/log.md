@@ -1,16 +1,24 @@
+### Настройка сервера отправки
+
+- Установка syslog-ng 
+```
 root@Server:/home/vagrant# apt update
 Hit:1 http://archive.ubuntu.com/ubuntu bionic InRelease
 
 root@Server:/home/vagrant# apt install syslog-ng
 Reading package lists... Done
-
+```
+- Расширение конфигурации syslog-ng полями
+```
 root@Server:/home/vagrant# nano /etc/syslog-ng/syslog-ng.conf 
 root@Server:/home/vagrant# cat /etc/syslog-ng/syslog-ng.conf | grep -A4 "options {"
 options { chain_hostnames(off); flush_lines(0); use_dns(no); use_fqdn(yes); keep_hostname(yes);
           owner("root"); group("adm"); perm(0640); stats_freq(0);
           bad_hostname("^gconfd$");
 };
-
+```
+-  Создаем правило источника
+```
 root@Server:/home/vagrant# nano /etc/syslog-ng/conf.d/src.conf
 root@Server:/home/vagrant# ll /etc/syslog-ng/conf.d/
 total 12
@@ -25,7 +33,9 @@ Server s_net {
         max-connections (300)
     );
 };
-
+```
+- Создаем правило назначения
+```
 root@Server:/home/vagrant# nano /etc/syslog-ng/conf.d/dst.conf
 root@Server:/home/vagrant# cat /etc/syslog-ng/conf.d/dst.conf 
 destination d_slog {
@@ -34,34 +44,45 @@ destination d_slog {
         create_dirs(yes)
     );
 };
-
+```
+- Формируем правило обработки логов
+```
 root@Server:/home/vagrant# nano /etc/syslog-ng/conf.d/log.conf
 root@Server:/home/vagrant# cat /etc/syslog-ng/conf.d/log.conf 
 log {
     Server(s_net);
     destination(d_slog);
 };
-
+```
+- Проверяем синтаксис и перезапускаем сервис
+```
 root@Server:/etc/syslog-ng/conf.d# syslog-ng -s
 root@Server:/etc/syslog-ng/conf.d# systemctl restart syslog-ng
 root@Server:/etc/syslog-ng/conf.d# netstat -an -4 | grep :514
 tcp        0      0 0.0.0.0:514             0.0.0.0:*               LISTEN
+```
 
-### Client
+### Настройка сервера приема сообщений
 
+- Установка syslog-ng
+```
 root@Client:/home/vagrant# apt update
 Hit:1 http://archive.ubuntu.com/ubuntu bionic InRelease
 
 root@Client:/home/vagrant# apt install syslog-ng
 Reading package lists... Done
-
+```
+- Расширение конфигурации syslog-ng полями
+```
 root@Client:/home/vagrant# nano /etc/syslog-ng/syslog-ng.conf 
 root@Client:/home/vagrant# cat /etc/syslog-ng/syslog-ng.conf | grep -A4 "options {"
 options { chain_hostnames(off); flush_lines(0); use_dns(no); use_fqdn(yes); keep_hostname(yes);
           owner("root"); group("adm"); perm(0640); stats_freq(0);
           bad_hostname("^gconfd$");
 };
-
+```
+- Правило приема сообщений
+```
 root@Client:/etc/syslog-ng# nano ./conf.d/src.conf
 root@Client:/etc/syslog-ng# cat ./conf.d/src.conf 
 source s_slog {
@@ -70,8 +91,10 @@ source s_slog {
         program_override("syslog")
     );
 };
-
-root@Client:/etc/syslog-ng# nano ./conf.d/dsst.conf
+```
+- Правило сохранения
+```
+root@Client:/etc/syslog-ng# nano ./conf.d/dst.conf
 root@Client:/etc/syslog-ng# cat ./conf.d/dst.conf 
 destination d_logserver {
     tcp (
@@ -79,16 +102,32 @@ destination d_logserver {
         port (514)
     );
 };
-
-
+```
+- Запускаем правило
+```
 root@Client:/etc/syslog-ng# nano ./conf.d/log.conf
 root@Client:/etc/syslog-ng# cat ./conf.d/log.conf 
 log {
     source (s_slog);
     destination (d_logserver);
 };
-
+```
+- Проверяем конфигурация и перезапускаем сервис
+```
 root@Client:/etc/syslog-ng# syslog-ng -s
 root@Client:/etc/syslog-ng# systemctl restart syslog-ng
+```
 
-### Check
+### Проверка работоспособности
+
+- Новые файлы создаются согласно структуре определенной в dst
+```
+root@Server:/home/vagrant# tree /var/log/remote
+.
+└── client.hillel.ua
+    └── user
+        └── 30-05-2021
+            └── syslog.log
+
+3 directories, 1 file
+```
