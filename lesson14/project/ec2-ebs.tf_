@@ -1,0 +1,11 @@
+resource "aws_ebs_volume" "ext_ebs" {
+  availability_zone = aws_instance.srv[count.index].availability_zone
+  type              = "gp2"
+  size              = 100
+}
+
+resource "aws_volume_attachment" "ext_ebs_attach" {
+  device_name = "/dev/xvdb"
+  instance_id = aws_instance.srv.0.id
+  volume_id   = aws_ebs_volume.ext_ebs.id
+}
