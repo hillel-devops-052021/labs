@@ -1,6 +1,6 @@
 resource "aws_security_group" "ingress-all-test" {
   name   = "allow-ssh-sg"
-  vpc_id = aws_vpc.test-env.id
+  vpc_id = aws_instance.srv[*].
 
   ingress {
     cidr_blocks = [

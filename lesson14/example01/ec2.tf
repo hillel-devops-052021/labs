@@ -14,10 +14,10 @@ resource "aws_instance" "srv" {
       "sudo apt install wget curl vim aptitude -y"
     ]
     connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = file("~/.ssh/aws_hillel.pem")
-      host        = aws_instance.srv[count.index].public_ip
+        type        = "ssh"
+        user        = "ubuntu"
+        private_key = file("~/.ssh/aws_hillel.pem")
+        host        = aws_instance.srv[count.index].public_ip
     }
   }
 }
