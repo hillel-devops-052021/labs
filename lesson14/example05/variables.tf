@@ -20,7 +20,7 @@ variable "instance_type" {
 
 # Amount of instances
 variable "instance_count" {
-  default = 1
+  default = 2
 }
 
 # Tags
