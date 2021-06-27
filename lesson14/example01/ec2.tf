@@ -5,13 +5,12 @@ resource "aws_instance" "srv" {
   tags          = var.tags
   key_name      = "aws_hillel"
   # aws ec2 create-key-pair --key-name aws_hillel --query 'KeyMaterial' --output text > aws_hillel.pem
-  security_groups = ["${aws_security_group.ingress-all-test.id}"]
 
 
   provisioner "remote-exec" {
     inline = [
       "sudo apt update",
-      "sudo apt install wget curl vim aptitude -y"
+      "sudo apt install wget curl vim -y"
     ]
     connection {
         type        = "ssh"
