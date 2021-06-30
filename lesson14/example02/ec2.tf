@@ -6,5 +6,4 @@ resource "aws_instance" "srv" {
   key_name      = "aws_hillel"
   # aws ec2 create-key-pair --key-name aws_hillel --query 'KeyMaterial' --output text > aws_hillel.pem
   vpc_security_group_ids = [aws_security_group.web.id]
-
 }
