@@ -3,13 +3,7 @@ sftp_home_partition: /home
 sftp_group_name: sftpusers
 sftp_directories: []
 sftp_start_directory: ''
+sftp_allow_passwords: False
 sftp_enable_selinux_support: False
 sftp_enable_logging: False
 sftp_nologin_shell: /sbin/nologin
-sftp_allow_passwords: true
-sftp_users:
-  - name: tb_user
-    password: "$1$salty$vtct8F0UEoxbJDI8O2Kwr1"
-    shell: False
-    sftp_directories:
-      - upload
