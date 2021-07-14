@@ -1,5 +1,6 @@
 provider "aws" {
-  region = "us-east-1"
+  region  = "us-east-1"
+  profile = "hillel"
 }
 
 locals {
@@ -20,27 +21,23 @@ data "aws_subnet_ids" "all" {
   vpc_id = data.aws_vpc.default.id
 }
 
-data "aws_ami" "amazon_linux" {
+data "aws_ami" "ubuntu" {
   most_recent = true
 
-  owners = ["amazon"]
-
   filter {
-    name = "name"
-
-    values = [
-      "amzn-ami-hvm-*-x86_64-gp2",
-    ]
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*"]
   }
 
-  filter {
-    name = "owner-alias"
 
-    values = [
-      "amazon",
-    ]
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
   }
+
+  owners = ["099720109477"]
 }
+
 
 module "security_group" {
   source  = "terraform-aws-modules/security-group/aws"
@@ -51,18 +48,13 @@ module "security_group" {
   vpc_id      = data.aws_vpc.default.id
 
   ingress_cidr_blocks = ["0.0.0.0/0"]
-  ingress_rules       = ["http-80-tcp", "all-icmp"]
+  ingress_rules       = ["ssh-tcp", "all-icmp"]
   egress_rules        = ["all-all"]
 }
 
 resource "aws_eip" "this" {
   vpc      = true
   instance = module.ec2.id[0]
-}
-
-resource "aws_placement_group" "web" {
-  name     = "hunky-dory-pg"
-  strategy = "cluster"
 }
 
 resource "aws_kms_key" "this" {
@@ -75,18 +67,17 @@ resource "aws_network_interface" "this" {
 }
 
 module "ec2" {
-  source = "../../"
+  source = "terraform-aws-modules/ec2-instance/aws"
 
   instance_count = 1
 
-  name          = "example-normal"
-  ami           = data.aws_ami.amazon_linux.id
-  instance_type = "c5.large"
-  subnet_id     = tolist(data.aws_subnet_ids.all.ids)[0]
-  #  private_ips                 = ["172.31.32.5", "172.31.46.20"]
+  name                        = "sftp-instance"
+  ami                         = data.aws_ami.ubuntu.id
+  instance_type               = "t2.micro"
+  subnet_id                   = tolist(data.aws_subnet_ids.all.ids)[0]
   vpc_security_group_ids      = [module.security_group.security_group_id]
   associate_public_ip_address = true
-  placement_group             = aws_placement_group.web.id
+  key_name                    = "serhiikudelin"
 
   user_data_base64 = base64encode(local.user_data)
 
@@ -94,105 +85,15 @@ module "ec2" {
   root_block_device = [
     {
       volume_type = "gp2"
-      volume_size = 10
+      volume_size = 30
       tags = {
         Name = "my-root-block"
       }
     },
   ]
 
-  ebs_block_device = [
-    {
-      device_name = "/dev/sdf"
-      volume_type = "gp2"
-      volume_size = 5
-      encrypted   = true
-      kms_key_id  = aws_kms_key.this.arn
-    }
-  ]
-
   tags = {
-    "Env"      = "Private"
-    "Location" = "Secret"
+    "Env"     = "Develop"
+    "Purpose" = "SFTP"
   }
-}
-
-module "ec2_with_t2_unlimited" {
-  source = "../../"
-
-  instance_count = 1
-
-  name          = "example-t2-unlimited"
-  ami           = data.aws_ami.amazon_linux.id
-  instance_type = "t2.micro"
-  cpu_credits   = "unlimited"
-  subnet_id     = tolist(data.aws_subnet_ids.all.ids)[0]
-  #  private_ip = "172.31.32.10"
-  vpc_security_group_ids      = [module.security_group.security_group_id]
-  associate_public_ip_address = true
-}
-
-module "ec2_with_t3_unlimited" {
-  source = "../../"
-
-  instance_count = 1
-
-  name                        = "example-t3-unlimited"
-  ami                         = data.aws_ami.amazon_linux.id
-  instance_type               = "t3.large"
-  cpu_credits                 = "unlimited"
-  subnet_id                   = tolist(data.aws_subnet_ids.all.ids)[0]
-  vpc_security_group_ids      = [module.security_group.security_group_id]
-  associate_public_ip_address = true
-}
-
-module "ec2_with_metadata_options" {
-  source = "../../"
-
-  instance_count = 1
-
-  name                        = "example-metadata_options"
-  ami                         = data.aws_ami.amazon_linux.id
-  instance_type               = "t2.small"
-  subnet_id                   = tolist(data.aws_subnet_ids.all.ids)[0]
-  vpc_security_group_ids      = [module.security_group.security_group_id]
-  associate_public_ip_address = true
-
-  metadata_options = {
-    http_endpoint               = "enabled"
-    http_tokens                 = "required"
-    http_put_response_hop_limit = 8
-  }
-}
-
-module "ec2_with_network_interface" {
-  source = "../../"
-
-  instance_count = 1
-
-  name            = "example-network"
-  ami             = data.aws_ami.amazon_linux.id
-  instance_type   = "c5.large"
-  placement_group = aws_placement_group.web.id
-
-  network_interface = [
-    {
-      device_index          = 0
-      network_interface_id  = aws_network_interface.this[0].id
-      delete_on_termination = false
-    }
-  ]
-}
-
-# This instance won't be created
-module "ec2_zero" {
-  source = "../../"
-
-  instance_count = 0
-
-  name                   = "example-zero"
-  ami                    = data.aws_ami.amazon_linux.id
-  instance_type          = "c5.large"
-  subnet_id              = tolist(data.aws_subnet_ids.all.ids)[0]
-  vpc_security_group_ids = [module.security_group.security_group_id]
 }
