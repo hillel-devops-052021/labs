@@ -1,0 +1,20 @@
+version: "3.8"
+services:
+  one:
+    image: alpine
+    command: ["/bin/sleep", "10000"]
+    networks:
+      - alpha
+  two:
+    image: alpine
+    command: ["/bin/sleep", "10000"]
+    networks:
+      - alpha
+  three:
+    image: alpine
+    command: ["/bin/sleep", "10000"]
+
+networks:
+  alpha:
+volumes:
+  volume_one:
