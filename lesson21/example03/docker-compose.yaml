@@ -1,0 +1,17 @@
+version: "3.8"
+services:
+  one:
+    image: alpine:${TAG}
+    command: ["/bin/sleep", "10000"]
+    env_file:
+      - envfile.txt
+  two:
+    image: alpine
+    command: ["/bin/sleep", "10000"]
+    environment:
+      - MYVAR=VALUE
+  three:
+    image: alpine
+    command: ["/bin/sleep", "10000"]
+    environment:
+      - TAG
