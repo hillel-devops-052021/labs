@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   web:
-    image: "nginx:${NGINX_VERSION}"
+    image: nginx:1.14.0
     volumes:
     - . :/code
     - logvolume01:/var/log

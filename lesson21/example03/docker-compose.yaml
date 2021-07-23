@@ -1,7 +1,7 @@
-version: "3.8"
+version: "3"
 services:
   one:
-    image: alpine:${TAG}
+    image: "alpine"
     command: ["/bin/sleep", "10000"]
     env_file:
       - envfile.txt
