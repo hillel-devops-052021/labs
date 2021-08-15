@@ -1,0 +1,22 @@
+- hosts: all
+  become: true
+  vars:
+    jenkins_hostname: jenkins.sergeykudelin.pp.ua
+    java_packages:
+      - openjdk-8-jdk
+  roles:
+    - role: geerlingguy.java
+    - role: geerlingguy.jenkins
+    - role: geerlingguy.docker
+  tasks:
+    - name: adding existing user jenkins to group docker
+      user:
+        name: jenkins
+        groups:
+          - docker
+        append: yes
+    - name: Ensure SELinux is set to enforcing mode
+      ansible.builtin.lineinfile:
+        path: /etc/systemd/system/multi-user.target.wants/docker.service
+        regexp: '^ExecStart='
+        line: ExecStart=/usr/bin/dockerd -H fd:// -H unix:///var/run/docker.sock --containerd=/run/containerd/containerd.sock
