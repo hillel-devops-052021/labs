@@ -10,9 +10,13 @@ services:
     command: ["/bin/sleep", "10000"]
     networks:
     - alpha
+    - beta
   three:
     image: alpine
     command: ["/bin/sleep", "10000"]
-    
+    networks:
+    - beta
+
 networks:
   alpha:
+  beta:
