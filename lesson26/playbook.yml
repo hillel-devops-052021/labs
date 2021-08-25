@@ -1,0 +1,76 @@
+---
+- name: Base components configurate and install
+  become: true
+  tags:
+    - base
+  hosts: all
+  gather_facts: False
+  tasks:
+    - name: Install python for Ansible
+      raw: test -e /usr/bin/python || apt -y update && apt install -y python-minimal
+      changed_when: False
+    - name: Add universe repository for bionic
+      apt_repository: 
+        repo: deb http://archive.ubuntu.com/ubuntu bionic universe
+        state: present
+    - name: Install python-dev  (state=present is optional)
+      apt:
+        name: python3-pip
+        state: present
+
+- hosts: tag_Docker_true
+  tags:
+    - docker
+  become: true
+  gather_facts: True
+  roles:
+    - role: geerlingguy.docker
+  tasks:
+    - name: adding existing user jenkins to group docker
+      user:
+        name: jenkins
+        groups:
+          - docker
+        append: yes
+    - name: adding existing user jenkins to group docker
+      user:
+        name: ubuntu
+        groups:
+          - docker
+        append: yes
+    - name: Ensure SELinux is set to enforcing mode
+      ansible.builtin.lineinfile:
+        path: /etc/systemd/system/multi-user.target.wants/docker.service
+        regexp: '^ExecStart='
+        line: ExecStart=/usr/bin/dockerd -H fd:// -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --containerd=/run/containerd/containerd.sock
+      notify: Restart service docker
+    - name: Set authorized key taken from file
+      ansible.posix.authorized_key:
+        user: jenkins
+        state: present
+        key: "{{ lookup('file', '/Users/sergeykudelin/.ssh/jenkins_agent_key.pub') }}"
+    - name: Install docker python package
+      pip:
+        name: docker
+    - name: Init a new swarm with default parameters
+      docker_swarm:
+        state: present
+
+  handlers:  
+    - name: Restart service docker
+      ansible.builtin.systemd:
+        state: restarted
+        daemon_reload: yes
+        name: docker
+
+- hosts: tag_Purpose_jenkins
+  become: true
+  tags:
+    - jenkins
+  vars:
+    jenkins_hostname: jenkins.sergeykudelin.pp.ua
+    java_packages:
+      - openjdk-11-jdk
+  roles:
+    - role: geerlingguy.java
+    - role: geerlingguy.jenkins

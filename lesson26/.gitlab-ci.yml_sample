@@ -1,0 +1,94 @@
+stages:
+  - build
+  - autotest
+  - push_image
+  - deploy_to_dev
+  - deploy_to_stage
+  - production_approve
+  - deploy_to_prod
+
+Build_image:
+  stage: build
+  tags:
+    - myapp
+  script:
+    - echo "Building ..."
+    - echo "Variables"
+    - echo "docker build -t {} ."
+
+Autotest:
+  stage: autotest
+  tags:
+    - myapp
+  script:
+    - echo "echo Dockerfile"
+
+Push_image:
+  stage: push_image
+  tags:
+    - myapp
+  script:
+    - echo "Image pushing"
+    - echo "docker login -u LOGIN -p PASSWORD HOST"
+    - docker push
+  when: on_success
+
+Deploy_to_dev:
+  stage: deploy_to_dev
+  tags:
+    - myapp
+  script:
+    echo "Deploying to DEV"
+    echo "helm upgrade --install ..."
+  only:
+    - branches
+  except:
+    - master
+    - develop
+  
+Deploy_to_stage:
+  stage: deploy_to_stage
+  tags:
+    - myapp-build
+  script:
+    - echo "Deploying to Stage ..."
+    - echo "helm upgrade ---install ..."
+  only:
+    - develop
+  only:
+    - tags
+  when: manual
+
+Approve_Prod:
+  stage: production_approve
+  tags:
+    - myapp
+  script:
+    - echo "Approved!"
+  only:
+    - master
+  only:
+    - tags
+  when: manual
+
+Deploy_to_PROD:
+  stage: deploy_to_prod
+  tags:
+    - myapp
+  script:
+    echo "Deploying to PROD"
+    echo "helm upgrade --install ..."
+  only: 
+    - master
+  only:
+    - tags
+  when: manual
+  
+
+
+  
+
+
+
+
+
