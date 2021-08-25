@@ -13,6 +13,7 @@ importlib-metadata = "==3.10.1"
 python-vagrant = "*"
 pytest = "*"
 pytest-testinfra = "*"
+docker = "*"
 
 [dev-packages]
 

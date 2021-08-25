@@ -1,5 +1,5 @@
 provider "aws" {
-  region  = "us-east-1"
+  region = "us-west-2"
 }
 
 locals {
@@ -7,6 +7,10 @@ locals {
 #!/bin/bash
 echo "Hello Terraform!"
 EOF
+}
+
+data "aws_route53_zone" "selected" {
+  name = "sergeykudelin.pp.ua."
 }
 
 ##################################################################
@@ -38,22 +42,42 @@ data "aws_ami" "ubuntu" {
 }
 
 
-module "security_group" {
+module "sg_jenkins" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "~> 4.0"
 
-  name        = "example"
+  name        = "jenkins"
   description = "Security group for example usage with EC2 instance"
   vpc_id      = data.aws_vpc.default.id
 
-  ingress_cidr_blocks = ["0.0.0.0/0"]
-  ingress_rules       = ["ssh-tcp", "all-icmp", "http-80-tcp", "https-443-tcp", "http-8080-tcp"]
+  ingress_with_cidr_blocks = [
+    {
+      rule        = "https-443-tcp"
+      cidr_blocks = "0.0.0.0/0"
+    },
+    {
+      rule        = "http-80-tcp"
+      cidr_blocks = "0.0.0.0/0"
+    },
+    {
+      rule        = "http-8080-tcp"
+      cidr_blocks = "0.0.0.0/0"
+    },
+    {
+      rule        = "all-all"
+      cidr_blocks = "35.84.222.179/32"
+    },
+    {
+      rule        = "ssh-tcp"
+      cidr_blocks = "0.0.0.0/0"
+    },
+  ]
   egress_rules        = ["all-all"]
 }
 
 resource "aws_eip" "this" {
   vpc      = true
-  instance = module.ec2.id[0]
+  instance = module.ec2_jenkins.id[0]
 }
 
 resource "aws_kms_key" "this" {
@@ -65,7 +89,7 @@ resource "aws_network_interface" "this" {
   subnet_id = tolist(data.aws_subnet_ids.all.ids)[count.index]
 }
 
-module "ec2" {
+module "ec2_jenkins" {
   source = "terraform-aws-modules/ec2-instance/aws"
 
   instance_count = 1
@@ -74,9 +98,9 @@ module "ec2" {
   ami                         = data.aws_ami.ubuntu.id
   instance_type               = "t2.medium"
   subnet_id                   = tolist(data.aws_subnet_ids.all.ids)[0]
-  vpc_security_group_ids      = [module.security_group.security_group_id]
+  vpc_security_group_ids      = [module.sg_jenkins.security_group_id]
   associate_public_ip_address = true
-  key_name                    = "serhiikudelin"
+  key_name                    = "jenkins"
 
   user_data_base64 = base64encode(local.user_data)
 
@@ -94,5 +118,14 @@ module "ec2" {
   tags = {
     "Env"     = "Develop"
     "Purpose" = "jenkins"
+    "Docker" = "true"
   }
+}
+
+resource "aws_route53_record" "jenkins" {
+  zone_id = data.aws_route53_zone.selected.zone_id
+  name    = "jenkins.sergeykudelin.pp.ua"
+  type    = "A"
+  ttl     = "300"
+  records = [aws_eip.this.public_ip]
 }

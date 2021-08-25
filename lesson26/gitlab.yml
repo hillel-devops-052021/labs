@@ -1,0 +1,6 @@
+- hosts: tag_Purpose_gitlab
+  become: true
+  vars_files:
+    - vars/gitlab.yml
+  roles:
+    - { role: geerlingguy.gitlab }

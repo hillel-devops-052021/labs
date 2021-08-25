@@ -1,6 +1,6 @@
 ---
 # General config.
-gitlab_domain: gitlab.sergeykudelin.pp.ua
+gitlab_domain: gitlab
 gitlab_external_url: "https://{{ gitlab_domain }}/"
 gitlab_git_data_dir: "/var/opt/gitlab/git-data"
 gitlab_edition: "gitlab-ce"
@@ -69,13 +69,13 @@ gitlab_email_display_name: "Gitlab"
 gitlab_email_reply_to: "gitlab@example.com"
 
 # Registry configuration.
-gitlab_registry_enable: "true"
-gitlab_registry_external_url: "https://gitlab.sergeykudelin.pp.ua:4567"
+gitlab_registry_enable: "false"
+gitlab_registry_external_url: "https://gitlab.example.com:4567"
 gitlab_registry_nginx_ssl_certificate: "/etc/gitlab/ssl/gitlab.crt"
 gitlab_registry_nginx_ssl_certificate_key: "/etc/gitlab/ssl/gitlab.key"
 
 # LetsEncrypt configuration.
-gitlab_letsencrypt_enable: "true"
+gitlab_letsencrypt_enable: "false"
 gitlab_letsencrypt_contact_emails: ["gitlab@example.com"]
 gitlab_letsencrypt_auto_renew_hour: 1
 gitlab_letsencrypt_auto_renew_minute: 30
