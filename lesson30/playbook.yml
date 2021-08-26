@@ -1,0 +1,19 @@
+---
+- name: Base components configurate and install
+  become: true
+  tags:
+    - base
+  hosts: all
+  gather_facts: False
+  tasks:
+    - name: Install python for Ansible
+      raw: test -e /usr/bin/python || apt -y update && apt install -y python-minimal
+      changed_when: False
+    - name: Add universe repository for bionic
+      apt_repository: 
+        repo: deb http://archive.ubuntu.com/ubuntu bionic universe
+        state: present
+    - name: Install python-dev  (state=present is optional)
+      apt:
+        name: python3-pip
+        state: present
