@@ -1,0 +1,10 @@
+  - job_name: 'ec2'
+    ec2_sd_configs:
+      - region: us-west-2
+        access_key: AKIATAHPZ2RZLJLCJUWU
+        secret_key: ***
+        port: 9100
+    relabel_configs:
+      - source_labels: [__meta_ec2_public_ip]
+        replacement: '${1}:9100'
+        target_label: __address__
