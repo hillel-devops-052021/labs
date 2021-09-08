@@ -2,7 +2,7 @@
     ec2_sd_configs:
       - region: us-west-2
         access_key: AKIATAHPZ2RZLJLCJUWU
-        secret_key: ***
+        secret_key: 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
         port: 9100
     relabel_configs:
       - source_labels: [__meta_ec2_public_ip]
